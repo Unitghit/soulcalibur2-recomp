@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Animated effects**: apply texture movement and scaling so effects such as Necrid's flames animate instead of showing a static tiled texture.
+
 ## 0.2.0-beta.1
 
 Soulcalibur II on Android phones and tablets, sharper pictures for 4K screens (up to 8x the Xbox's resolution),
