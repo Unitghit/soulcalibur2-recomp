@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Link hair visibility**: keep the outer hair surfaces visible from both sides, fixing dark gaps near his temples during character select and combat.
+
 ## 0.3.0-beta.1
 
 The GameCube HD texture pack, the European disc in its five languages on the Mac, and fixes: Linux starts without

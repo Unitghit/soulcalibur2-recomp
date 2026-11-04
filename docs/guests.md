@@ -429,3 +429,17 @@ sums, matching the C++ converter. Python 3.12 and newer changed the built-in
 `sum` algorithm; using it could change near-zero bounding-sphere coordinates
 and prevent byte-identical archives even though material decoding agreed.
 The regression includes cancellation and signed-zero cases.
+
+## Link outer-hair culling compatibility (2026-11-03)
+
+Dark angular patches beneath Link's fringe exposed underlying surfaces where
+outer hair was culled. Unlit hair and white texture tests left the patches;
+two-sided hair restored coverage with normal lighting. Conversion now clears
+0x08000000 on Link costume materials 3 and 4 (opaque and sorted outer-hair
+passes). This is a scoped compatibility treatment, not a claim that every GX
+material flag or winding convention is fully mapped. Other hair passes were
+already two-sided. Normals, lighting, alpha, textures and triangle order stay
+unchanged. All four US costumes receive it; guest cache version 3 regenerates
+older packs. There is no runtime texture-address override, so combat reloads
+cannot lose the correction. Synthetic tests verify the C++ and Python treatment produces identical bytes,
+changes only the two flags, and rejects unexpected layouts without partial edits.

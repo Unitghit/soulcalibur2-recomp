@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /* The port of tools/guests/build_guest.py: the same root.olk out. */
 #include "build.h"
+#include "link_hair.h"
 
 #include "motion.h"
 #include "ps2tex.h"
@@ -90,6 +91,7 @@ Bytes link_costume(const std::vector<Bytes> &templ, const Bytes &gc_costume)
     const auto costume = parts_of(gc_costume, true);
     std::vector<Bytes> parts = templ;
     parts.at(0) = convert_model(costume.at(0));
+    link_hair_two_sided(parts.at(0));
     parts.at(1) = convert_records(costume.at(1));
     parts.at(2) = convert_sound_container(costume.at(2));
     parts.at(3) = convert_pose_bank(costume.at(3));
