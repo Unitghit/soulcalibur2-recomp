@@ -2,6 +2,7 @@
 """Sequential Windows off/on/on/off host-timing comparison with private saves."""
 import argparse
 import ctypes
+from ctypes import wintypes
 import json
 import os
 from pathlib import Path
@@ -15,6 +16,23 @@ def ensure_idle():
         "if (Get-Process -Name recomp_program_runner,soulcalibur2,soulcalibur2-launcher,recomp_graphics_inventory_test -ErrorAction SilentlyContinue) { exit 1 }"],capture_output=True)
     if check.returncode:
         raise RuntimeError("Close the existing game/launcher before starting a latency test")
+
+def window_state(pid):
+    user32=ctypes.windll.user32
+    user32.IsIconic.argtypes=[wintypes.HWND]
+    user32.IsWindowVisible.argtypes=[wintypes.HWND]
+    user32.GetClientRect.argtypes=[wintypes.HWND,ctypes.POINTER(wintypes.RECT)]
+    windows=[]
+    @ctypes.WINFUNCTYPE(ctypes.c_bool,ctypes.c_void_p,ctypes.c_void_p)
+    def visitor(hwnd,param):
+        owner=ctypes.c_ulong();user32.GetWindowThreadProcessId(hwnd,ctypes.byref(owner))
+        if owner.value==pid:
+            rect=wintypes.RECT();user32.GetClientRect(hwnd,ctypes.byref(rect))
+            windows.append(dict(visible=bool(user32.IsWindowVisible(hwnd)),
+                minimized=bool(user32.IsIconic(hwnd)),width=rect.right-rect.left,height=rect.bottom-rect.top))
+        return True
+    user32.EnumWindows(visitor,0)
+    return windows
 
 def close(process):
     user32=ctypes.windll.user32
@@ -69,7 +87,11 @@ def main():
             process=subprocess.Popen(cmd,env=env,stdout=out,stderr=err,creationflags=subprocess.CREATE_NO_WINDOW)
             try:
                 deadline=time.monotonic()+args.seconds
-                while process.poll() is None and time.monotonic()<deadline:time.sleep(.25)
+                with (folder/"window-state.jsonl").open("w",encoding="utf-8") as windows:
+                    while process.poll() is None and time.monotonic()<deadline:
+                        windows.write(json.dumps(dict(remaining_seconds=deadline-time.monotonic(),windows=window_state(process.pid)))+"\n")
+                        windows.flush()
+                        time.sleep(1)
                 code=close(process) if process.poll() is None else process.returncode
             finally:
                 if process.poll() is None:process.terminate();process.wait()

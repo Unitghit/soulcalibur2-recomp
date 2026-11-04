@@ -9,6 +9,12 @@
 #include <limits>
 
 int main() {
+    // Production timestamps move with snapshots, and reset on slot reuse.
+    D3dCapturePacket timed;
+    timed.produced_ns = 1234;
+    auto timed_moved = std::move(timed);
+    assert(timed_moved.produced_ns == 1234);
+    timed_moved.clear(); assert(timed_moved.produced_ns == 0);
     struct Vertex { float xyz[3], normal[3], uv[2]; };
     Vertex a{{0, 0, 0}, {0, 1, 0}, {0, 0}}, b{{10, 4, 2}, {0, 1, 0}, {0, 0}};
     RecompD3dPresenterDrawCommand before{}, after{}, out{};
@@ -176,6 +182,14 @@ int main() {
         std::unordered_map<uint64_t,uint32_t> current_counts;
         const auto match = [&](const auto &p,const auto &c) {
             sc2_visual::matchSnapshots(p,c,matched,previous_draws,current_counts);
+            const auto expected = matched;
+            D3dCapturePacket empty;
+            std::vector<uint64_t> old_keys, new_keys;
+            sc2_visual::matchSnapshots(empty,p,matched,previous_draws,current_counts,&old_keys);
+            sc2_visual::matchSnapshots(p,c,matched,previous_draws,current_counts,&new_keys,&old_keys);
+            assert(matched == expected);
+            for (size_t i=0; i<c.count(); ++i)
+                assert(new_keys[i] == sc2_visual::key(c.command(i).data.draw));
         };
         match(old,next); assert(matched[0]==1 && matched[1]==0);
         std::vector<unsigned char> interpolated;

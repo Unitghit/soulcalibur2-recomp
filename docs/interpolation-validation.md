@@ -66,3 +66,24 @@ Do not publish or mark ready until the measured results, source/package review,
 build checks and platform limits are included. Online rollback/input-delay
 compatibility is not established by an offline scripted run. No game-derived
 snapshots, saves, inventories or screenshots belong in the contribution.
+
+## Render-only latency optimizations
+
+Snapshots carry their production time before queue backpressure. Interpolation
+samples one tick behind that timeline, so queue waiting and geometry preparation
+do not restart the interpolation delay. Fractions remain bounded to the two
+available snapshots; no future gameplay or pose is predicted. Cached draw
+signatures avoid repeated hashing while preserving byte and topology checks.
+The renderer finishes the last small command batch before replaying an older
+snapshot. Input sampling, simulation, collision and original readback rendering
+are unchanged.
+
+The timing tests cover startup, invalid history, irregular intervals, preparation
+delay and stalls. Cached matching is checked against the uncached path for
+reordered, culled and ambiguous meshes. The benchmark logs window visibility and
+minimization once per second to help diagnose unavailable swapchains.
+
+The summary also reports source-time progression and endpoint clamping. These
+use queue timestamps as an approximation, including backpressure; they do not
+measure actual vertex motion or establish visual correctness. Compare them with
+submission intervals and weighted sample age, rather than optimizing age alone.

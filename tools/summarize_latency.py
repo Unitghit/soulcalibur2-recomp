@@ -39,6 +39,20 @@ def summarize(path, scene=7):
     dequeue = [(int(r["time_ns"])-int(r["queued_ns"]))/1e6 for r in rows
                if r["event"] == "dequeue" and int(r["scene"]) == scene and int(r["queued_ns"]) > 0]
     gaps = [(int(b["time_ns"])-int(a["time_ns"]))/1e6 for a,b in zip(shown,shown[1:])]
+    # Diagnostic source-time progression, not image/animation motion. Queue
+    # publication timestamps approximate source times and include backpressure.
+    source_steps, fractions = [], []
+    previous_source = None
+    for r in shown:
+        old, current = int(r["previous_queued_ns"]), int(r["queued_ns"])
+        alpha = float(r["alpha"])
+        if old <= 0 or current <= old or not 0 <= alpha <= 1:
+            previous_source = None
+            continue
+        source = old + alpha*(current-old)
+        if previous_source is not None: source_steps.append((source-previous_source)/1e6)
+        previous_source = source
+        fractions.append(alpha)
     return {"path": str(path), "scene": scene, "submitted_frames": len(shown),
             "unavailable_swapchains": sum(r["window_submitted"] != "1" for r in frames),
             "trace_dropped_rows": dropped, "latest_sample_to_cpu_submission": stats(newest),
@@ -46,6 +60,9 @@ def summarize(path, scene=7):
             "matched_geometry_history_component": stats(history),
             "matched_geometry_weighted_sample_age_proxy": stats(weighted),
             "cpu_submission_interval": stats(gaps),
+            "matched_geometry_source_interval_proxy": stats(source_steps),
+            "repeated_source_times": sum(abs(delta)<.01 for delta in source_steps),
+            "latest_endpoint_fraction": sum(alpha>=.999999 for alpha in fractions)/len(fractions) if fractions else None,
             "scope": "Host timestamps and latest-sample provenance only. Not visible-response latency, GPU completion, compositor timing or display scanout. Mixed-image weighted ages apply only to matched interpolated geometry."}
 
 if __name__ == "__main__":
