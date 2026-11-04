@@ -87,3 +87,39 @@ The summary also reports source-time progression and endpoint clamping. These
 use queue timestamps as an approximation, including backpressure; they do not
 measure actual vertex motion or establish visual correctness. Compare them with
 submission intervals and weighted sample age, rather than optimizing age alone.
+
+## GPU and presentation diagnostics
+
+`tools/benchmark_latency.py --gpu-timing` additionally records CPU swapchain
+acquisition and submission durations, and nonblocking GPU-fence completion
+bounds. The renderer polls only during its normal work/idle opportunities and
+never waits on a diagnostic fence. The lower bound is the last unsuccessful
+query (or submission start); the upper bound is the first successful query.
+These include queueing and polling uncertainty, not pure GPU execution time.
+The original render and its readbacks remain unchanged. Tracing can perturb
+performance and must be compared against uninstrumented runs.
+
+`--frames-in-flight 1|2|3` is a diagnostic override for interpolated rendering.
+The normal SDL default remains unchanged. Reducing the limit may prevent
+acquiring a swapchain image and skip a presentation, so a lower completion
+bound alone is not grounds for enabling it by default. `--sequence 144 144`
+selects repeated interpolation runs instead of the default off/on/on/off order.
+
+`--presentmon PATH` optionally launches an independently supplied PresentMon
+console executable filtered to the tested executable name (the harness refuses overlapping games). It records GPU/display events
+externally and requires actual CSV output; a clean monitor exit without frame
+data is rejected. Availability depends on Windows event tracing, permissions,
+backend and drivers. Do not report display timing from the fallback fence trace.
+`tools/summarize_gpu_timing.py` reports completion brackets, uncertainty, failed
+acquisitions and incomplete fences. Keep raw recordings under `private/`.
+
+The working capture format is PresentMon v1 metrics with `--qpc_time`.
+`tools/summarize_presentation.py` joins those timestamps to the host combat
+interval using the machine's QueryPerformanceFrequency. It reports displayed
+and dropped frames separately and discloses time-span coverage. A short capture
+must not be represented as a full matched run. These are Windows event-tracing
+estimates, not optical input-to-photon measurements. The normal Vulkan path may
+appear as DXGI in the Windows presentation events.
+
+Metric definitions: https://github.com/GameTechDev/PresentMon/blob/v1.9.2/README.md#csv-columns
+Queue-limit semantics: https://wiki.libsdl.org/SDL3/SDL_SetGPUAllowedFramesInFlight
