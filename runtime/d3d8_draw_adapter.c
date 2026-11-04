@@ -9,6 +9,7 @@
 #include "d3d_vertex_shader_model.h"
 #include "kernel_abi.h"
 #include "scene_freeze_adapter.h"
+#include "sc2_scene_probe.h"
 #include "stop_report.h"
 #include "xapi_time_adapter.h"
 
@@ -1434,6 +1435,7 @@ static struct {
 static uint32_t gather_first;   /* the draw's first vertex index in the streams */
 /* SetModelView's model view while a composite overrides the device transforms. */
 static bool model_view_active;
+static uint32_t model_view_source;
 static float model_view[16];
 static float model_composite[16];
 
@@ -2008,11 +2010,26 @@ static void submit_draw(uint32_t primitive, uint32_t count, uint32_t vertices,
         largest -= smallest;
     }
     draw->vertex_count = largest + 1u;
+    uint32_t scene_position = stride == 32u ? vertices : 0u;
+    draw->visual_vertex_source = vertices & 0x3ffffffu;
+    draw->visual_transform_source = model_view_active ? model_view_source : 0u;
     uint8_t *packed = NULL;
     if (gather.active) {
         /* Declaration streams gathered into FVF order (declaration_fvf). */
         if (gather_first == UINT32_MAX) recomp_stop(2, "d3d8:gather-user-pointer");
         packed = gather_vertices(gather_first + smallest, draw->vertex_count, layout.stride);
+        scene_position = 0u;
+        draw->visual_vertex_source = 0u;
+        if (gather.count && gather.part[0].size >= 12u) {
+            const uint32_t slot = STREAMS + gather.part[0].stream * 12u;
+            const uint32_t step = *recomp_memory_u32(slot), buffer = *recomp_memory_u32(slot + 8u);
+            uint32_t base;
+            if (buffer && recomp_d3d_texture_resolve_cpu_address(*recomp_memory_u32(buffer+4u), &base)) {
+                const uint32_t position = base + (gather_first+smallest)*step + gather.part[0].offset;
+                draw->visual_vertex_source = position & 0x3ffffffu;
+                if (step == 32u) scene_position = position;
+            } else draw->visual_vertex_source = 0u;
+        }
         draw->vertex_bytes = packed;
         draw->vertex_stride = layout.stride;
         draw->index_bytes = indices;
@@ -2182,6 +2199,8 @@ static void submit_draw(uint32_t primitive, uint32_t count, uint32_t vertices,
         general_fog(device, &layout, draw, program);
     }
     command.type = RECOMP_D3D_PRESENTER_COMMAND_DRAW;
+    if (scene_position && !points && !program && !layout.pretransformed && !draw->blend_weight_count)
+        sc2_scene_attach(draw, scene_position);
     if (native_line) {
         draw->line_width = line_width();
         draw->line_antialias = state->edge_antialias != 0u;
@@ -2424,10 +2443,12 @@ static void set_model_view(void)
     if (composite == 0u) {
         *dirty = (*dirty & 0x7ffffdffu) | 0x200u;
         model_view_active = false;
+        model_view_source = 0u;
     } else {
         if (matrix == 0u) recomp_stop(2, "d3d8:model-view-pointer");
         *dirty = (*dirty & 0xfffffdffu) | 0x80000000u;
         recomp_guest_load(model_view, matrix, sizeof model_view);
+        model_view_source = matrix & 0x3ffffffu;
         recomp_guest_load(model_composite, composite, sizeof model_composite);
         if ((*recomp_memory_u32(device + 8u) & 0x10u) == 0u)
             recomp_guest_store(device + 0x5a0u, model_view, sizeof model_view);

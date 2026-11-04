@@ -21,7 +21,12 @@ std::vector<RecompWarmShader> GraphicsInventory(const std::vector<uint8_t> &memo
         std::memset(&recipe, 0, sizeof recipe);
         recipe.fvf = fvf; recipe.pixel = pixel; recipe.count = uint32_t(program.size() / 4);
         if (!program.empty()) std::memcpy(recipe.program, program.data(), program.size() * 4);
-        Bytes bytes{}; std::memcpy(bytes.data(), &recipe, sizeof recipe); unique.insert(bytes);
+        const unsigned variants = pixel.kind == RECOMP_D3D_PIXEL_COMBINERS ? 3u :
+            (!program.empty() || (fvf & 14) == 4) ? 1u : 2u;
+        for (unsigned visual = 0; visual < variants; ++visual) {
+            recipe.visual = uint8_t(visual);
+            Bytes bytes{}; std::memcpy(bytes.data(), &recipe, sizeof recipe); unique.insert(bytes);
+        }
     };
     // Material selection in the supported executable: five pixel definitions.
     for (uint32_t address = 0x193f60; address < 0x194410; address += 0xf0) {

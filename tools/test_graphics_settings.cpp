@@ -16,7 +16,7 @@ int main()
     for (const auto &f : sc2::Features()) assert(f.name != "graphics_prepare");
 #endif
     auto write = [&](const char *value) { std::ofstream(path) << value; };
-    for (const auto &f : sc2::Features()) assert(f.name != "shader_workers" && f.name != "frame_interpolation");
+    for (const auto &f : sc2::Features()) assert(f.name != "shader_workers");
     write("[features]\npreset=pure\n"); assert(!sc2::LoadSettings(path).graphics_prepare);
     write("[features]\npreset=enhanced\n"); assert(sc2::LoadSettings(path).graphics_prepare == supported);
     write("[features]\npreset=custom\ngraphics_prepare=0\n"); assert(!sc2::LoadSettings(path).graphics_prepare);

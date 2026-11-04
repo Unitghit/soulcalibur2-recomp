@@ -12,7 +12,7 @@ its launcher and feature menu do not offer the switch. Windows SDL GPU builds us
 The native inventory builder reads the already authenticated executable and
 combines its material and effect programs with supported renderer state families.
 It does not require Python or a recorded playthrough at startup. The current
-inventory has 235 shader recipes, plus the renderer's base shaders. Runtime
+inventory has 447 shader recipes including visual variants, plus the renderer's base shaders. Runtime
 learning records additional combinations for later launches. This is conservative
 coverage, not proof of every possible state: unknown combinations still compile
 when encountered, and asset loading can still hitch.
@@ -46,7 +46,7 @@ comparison inputs belong under `private/`. `recomp_graphics_inventory_test` in t
 merged runtime prepares that private inventory without executing guest code;
 `--cancel` checks early closure. No inventory is shipped in the source tree.
 
-Local Windows/Vulkan validation generated the same 235 records with the C++ and
+The preceding shader-only contribution generated the same 235 records with the C++ and
 Python builders. An empty-cache preparation constructed 18,616 pipelines without
 failure. On the test machine, one worker took 4.03 s, four took 1.63 s and automatic
 16-worker selection took 1.14 s. A populated cache took 0.25 s. All runs produced

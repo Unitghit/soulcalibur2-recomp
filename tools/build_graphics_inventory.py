@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
 """Build SC2's local startup inventory from assets/XBE, without running gameplay.
 
 Run with --disc <Xbox ISO> --assets <guest root.olk> --output <graphics-cache>.
@@ -57,11 +56,12 @@ def pixel_combiner(words):
     struct.pack_into('<39I',p,184,*comb)
     return p
 
-def recipe(fvf, pixel, program=b''):
+def recipe(fvf, pixel, visual=0, program=b''):
     if len(program)%16 or len(program)>136*16:
         raise ValueError('invalid vertex program')
     r=bytearray(RECIPE_SIZE)
     struct.pack_into('<II',r,0,fvf,len(program)//16)
+    r[16]=visual
     r[20:20+len(program)]=program
     r[PIXEL_OFFSET:]=pixel
     return bytes(r)
@@ -127,7 +127,7 @@ def build(xbe):
             p=pixel_combiner(w)
             for j,stage in enumerate(active):
                 p[8+44*stage+40:8+44*stage+43]=bytes((1,bits[j],bits[j+len(active)]))
-            recipes.add(recipe(0x152,p))
+            for visual in (0,1,2):recipes.add(recipe(0x152,p,visual))
     # UI/effect fixed-function state families established by 0x314d0,
     # 0x31570, 0x31670, 0x33840 and 0x8ffc0, plus SDK inherited alpha state.
     layouts=[(v,b'') for v in (2,0x42,0x44,0x104,0x112,0x142,0x144,0x152)] + vertex_programs(xbe)
@@ -135,9 +135,10 @@ def build(xbe):
         # The fourth legacy effect program reads undeclared v1. The current
         # renderer cannot translate it; report this exclusion explicitly.
         if code and fvf==2: continue
+        visuals=(0,) if code or (fvf&0xe)==4 else (0,1)
         for spec in (0,1):
             p=bytearray(856);struct.pack_into('<I',p,0,1);p[340]=spec
-            recipes.add(recipe(fvf,p,code))
+            for visual in visuals:recipes.add(recipe(fvf,p,visual,code))
             # SC2 disables the fixed-function stage for untextured layouts.
             if not fvf&0xf00: continue
             for op,alpha2,kill,transform in itertools.product((4,5),(0,1),(0,1),(0,1)):
@@ -145,7 +146,7 @@ def build(xbe):
                 q=bytearray(p);struct.pack_into('<I',q,4,1)
                 struct.pack_into('<10I',q,8,op,0,2,0,op,0,2,alpha2,1,0)
                 q[48:51]=bytes((bool(fvf&0xf00),kill,transform))
-                recipes.add(recipe(fvf,q,code))
+                for visual in visuals: recipes.add(recipe(fvf,q,visual,code))
     return recipes
 
 def main():

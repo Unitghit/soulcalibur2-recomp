@@ -35,6 +35,7 @@
 #include "save_transaction.h"
 #include "sc2_settings.h"
 #include "sc2_graphics_inventory.h"
+#include "d3d_latency_trace.h"
 #include "sc2_menu.h"
 #include "sc2_training.h"
 #include "sc2_guest.h"
@@ -954,7 +955,9 @@ static bool sampleInput(std::uint32_t port, RecompInputGamepad *gamepad)
             static_cast<unsigned long long>(inputPulses.sample_count));
         startHeld = start;
     }
-    return sc2::TrainingPad(0u, gamepad, sampled);
+    const bool available = sc2::TrainingPad(0u, gamepad, sampled);
+    if (available) recomp_latency::sample(*recomp_memory_u32(0x398700u));
+    return available;
 }
 
 int main(int argc, char **argv)
@@ -1220,6 +1223,8 @@ int main(int argc, char **argv)
         sc2::TrainingState().no_damage[1] = settings.no_damage[1];
         sc2::TrainingState().one_hit = settings.one_hit;
         sc2::TrainingState().fps_counter = settings.fps_counter;
+        if (!settings.render_fps.empty() && std::getenv("RECOMP_RENDER_FPS") == nullptr)
+            setenv("RECOMP_RENDER_FPS", settings.render_fps.c_str(), 1);
         sc2::OnlineDisplay() = {settings.online_ping, settings.online_delay, settings.online_hide_names};
         if (settings.scale > 1u && std::getenv("RECOMP_D3D_SCALE") == nullptr)
             setenv("RECOMP_D3D_SCALE", std::to_string(settings.scale).c_str(), 1);
@@ -1418,6 +1423,7 @@ int main(int argc, char **argv)
     recomp_free_camera_install();
     if (!scriptedInputOnly) recomp_input_adapter_set_feedback_sink(recomp_input_host_set_vibration);
     std::atexit(recomp_input_host_stop_vibration);
+    recomp_stop_cleanup = recomp_d3d8_shutdown;
     std::atexit(recomp_d3d8_shutdown);
     std::atexit(recomp_dsound_api_shutdown);
     recomp_runtime.registers.esp = XBOX_STARTUP_STACK_TOP;

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 cmake_minimum_required(VERSION 3.20)
-project(sc2_graphics_tests CXX)
+project(sc2_graphics_tests C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SC2_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
@@ -23,3 +23,13 @@ add_executable(sc2_graphics_unsupported_settings_test ../test_graphics_settings.
 target_include_directories(sc2_graphics_unsupported_settings_test PRIVATE "${SC2_ROOT}/runtime")
 target_link_libraries(sc2_graphics_unsupported_settings_test PRIVATE SDL3::SDL3)
 add_test(NAME sc2-graphics-unsupported-settings COMMAND sc2_graphics_unsupported_settings_test)
+
+add_executable(sc2_visual_interpolation_test ../test_visual_interpolation.cpp
+    "${RECOMP_RUNTIME_DIR}/d3d_presenter_capture.cpp" "${RECOMP_RUNTIME_DIR}/d3d_draw_model.c")
+target_include_directories(sc2_visual_interpolation_test PRIVATE "${RECOMP_RUNTIME_DIR}")
+add_test(NAME sc2-visual-interpolation COMMAND sc2_visual_interpolation_test)
+add_executable(sc2_rendering_settings_test ../test_rendering_settings.cpp
+    "${SC2_ROOT}/runtime/sc2_settings.cpp" "${SC2_ROOT}/recomp-common/settings.cpp")
+target_compile_definitions(sc2_rendering_settings_test PRIVATE RECOMP_SDL_GPU_PRESENTER=1)
+target_link_libraries(sc2_rendering_settings_test PRIVATE SDL3::SDL3)
+add_test(NAME sc2-rendering-settings COMMAND sc2_rendering_settings_test rendering-settings-test.ini)

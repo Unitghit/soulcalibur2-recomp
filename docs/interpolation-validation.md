@@ -1,0 +1,68 @@
+# Interpolation contribution and latency validation
+
+This contribution keeps simulation at 60 Hz and presents intermediate visual
+frames from two owned render snapshots. It includes retained geometry, native
+skin-pose capture, safe matching of reordered/repeated meshes, seam fixes, and
+history reset rules for scene changes, save-state loads and photo-mode stepping.
+The original rendering work used by readbacks and visibility queries still runs.
+
+The launcher offers Off, Match monitor and Custom rate, using its existing
+Rendering page. Pure and Enhanced leave interpolation off. It is currently
+exposed only for Windows SDL GPU builds, where the renderer thread can service
+independent presentation deadlines. Other backends/platforms need further work
+and validation. The installed preview and the shader PR branches are separate.
+
+## What the latency recording measures
+
+`RECOMP_LATENCY_TRACE` enables a bounded in-memory diagnostic recording, written
+as CSV on clean exit. The input callback records the latest sampled player-one
+input timestamp and scene. Published command packets retain that provenance;
+renderer dequeue, snapshot preparation and CPU submission record their own
+monotonic timestamps. Interpolated submissions carry both snapshot identities
+and the interpolation fraction. Failed swapchain acquisitions are counted and
+excluded from submitted-frame timing statistics. Trace overflow is reported.
+The recorder does not force GPU fences or synchronous readbacks. The CSV
+`window_submitted` flag means a swapchain image was acquired and a CPU submission
+was attempted; it is not a GPU-completion or displayed-frame acknowledgment.
+
+The summaries distinguish packet queue waiting, latest-input-sample age at CPU
+submission, and the weighted history age for matched interpolated geometry.
+The latter is a timing proxy, not a claim that every pixel has that age: UI,
+unmatched draws and discontinuities may use the current snapshot. Input
+provenance does not prove a particular attack animation has responded. The
+software recorder does not measure USB/controller delay, GPU completion,
+compositor queues or physical scanout. A frame can be submitted and never shown.
+Do not call these numbers input-to-photon latency.
+
+The algorithm deliberately retains about one 60 Hz tick of visual history.
+At 144 Hz, display opportunities are approximately 6.94 ms apart, but that does
+not remove the history requirement. Report the measured software timing tradeoff
+separately from frame pacing. True button-to-visible-response measurements need
+an external input marker and high-speed camera or an optical latency sensor.
+
+## Automated comparison
+
+Build the isolated game and run `tools/benchmark_latency.py --help`. It takes
+an executable, the user's disc, a read-only source save directory containing
+`partition1`, and a new output directory under `private/`. It copies saves into
+independent run folders and runs Off / 144 Hz / 144 Hz / Off sequentially using
+the same scripted title-to-match inputs. It refuses to start while another game
+or launcher is running, closes each process, and waits for its exit before the
+next. It requires sufficient combat samples and rejects overflow or bad exits.
+
+The default uses a normal visible window; this still does not provide physical
+scanout timestamps. `--hidden` is diagnostic only: the hidden-window trial on
+Windows received no swapchain images and was correctly rejected by the harness.
+`tools/summarize_latency.py` can reanalyze existing CSVs. Reports include median,
+p95 and p99, failed swapchain acquisitions and dropped trace records. Compare
+repeated runs, keep display settings and workload constant, and disclose logging
+overhead and uncontrolled background work. The recorder is opt-in and its mutex,
+allocations and memory use can perturb the measurement. No zero-overhead claim.
+
+## Submission status
+
+Prepared in isolated branches on top of the shader-preparation contributions.
+Do not publish or mark ready until the measured results, source/package review,
+build checks and platform limits are included. Online rollback/input-delay
+compatibility is not established by an offline scripted run. No game-derived
+snapshots, saves, inventories or screenshots belong in the contribution.

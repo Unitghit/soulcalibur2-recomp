@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     const auto first = sc2::GraphicsInventory(memory), second = sc2::GraphicsInventory(memory);
     assert(!first.empty() && first.size() == second.size());
     assert(std::memcmp(first.data(), second.data(), first.size()*sizeof(first[0])) == 0);
-    for (const auto &r : first) assert(r.reserved == 0 && r.count <= 136);
+    for (const auto &r : first) assert(r.visual <= 2 && r.count <= 136);
     const auto rejected = [&](const std::vector<uint8_t> &input) {
         try { sc2::GraphicsInventory(input); } catch (const std::exception &) { return true; }
         return false;
