@@ -4,7 +4,8 @@
 # build/Soulcalibur2Recomp-linux-x86_64.tar.gz. Run on the Mac in Docker, with the repo mounted at its own
 # path (build/src links by absolute path):
 #   docker run --rm --platform linux/amd64 -v "$PWD":"$PWD" -w "$PWD" doaxvb-build tools/release/linux.sh
-# The lift (private/program) is made on the Mac first; it is the same for every system.
+# The lift (private/program) is made on the Mac first; it is the same for every system. shaderc is fetched on the
+# Mac first too (tools/release/fetch_shaderc_linux.sh).
 set -e
 root=$(cd "$(dirname "$0")/../.." && pwd)
 out="$root/build/release-linux"
@@ -21,6 +22,8 @@ cp "$root/build/linux-launcher/soulcalibur2-launcher" "$pkg/"
 # the runtime's shared SDL3, found beside the program
 # (as its soname, a plain file: the launcher's updates list files, not links)
 cp -L "$root/build/linux-runner/_deps/sdl3-build/libSDL3.so.0" "$pkg/libSDL3.so.0"
+# shaderc, found the same way: the renderer can't start without it, and not every distribution has it (#30, #40)
+cp "$root/private/toolchains/shaderc-linux/libshaderc_shared.so.1" "$pkg/"
 cp "$root/LICENSE" "$root/README.md" "$root/THIRD_PARTY_NOTICES.md" "$pkg/"
 cp -R "$root/docs/licenses" "$pkg/licenses"
 # (the Shader feature's presets, beside the game: tools/shaders.sh)

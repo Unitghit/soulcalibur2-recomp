@@ -12,8 +12,8 @@ builds; a tag makes a draft release with its text and no files (`release.yml`).
 3. **The archives**, on the Mac with the lift done (`private/program`):
    - `tools/release/macos.sh`: `build/Soulcalibur2Recomp-macOS.zip` (Homebrew's SDL3 and shaderc inside the app;
      it asks for the macOS it was built on).
-   - Linux, in Docker: `docker run --rm --platform linux/amd64 -v "$PWD":"$PWD" -w "$PWD" doaxvb-build
-     tools/release/linux.sh`: `build/Soulcalibur2Recomp-linux-x86_64.tar.gz`.
+   - Linux, in Docker (shaderc from `tools/release/fetch_shaderc_linux.sh`): `docker run --rm --platform linux/amd64
+     -v "$PWD":"$PWD" -w "$PWD" doaxvb-build tools/release/linux.sh`: `build/Soulcalibur2Recomp-linux-x86_64.tar.gz`.
    - Windows, in Docker (llvm-mingw in `private/toolchains`, shaderc from `tools/release/fetch_shaderc_windows.sh`):
      `docker run --rm -v "$PWD":"$PWD" -w "$PWD" cps2recomp-build-arm64 tools/release/windows.sh`:
      `build/Soulcalibur2Recomp-windows-x64.zip`.
