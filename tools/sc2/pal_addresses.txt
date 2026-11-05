@@ -58,6 +58,7 @@
 0x000566f0 0x00057c80 exact            # sc2_hooks.c:31
 0x00056840 0x00057dd0 call             # sc2_wm_select.c:84
 0x00056920 0x00057eb0 exact            # sc2_wm_select.c:238
+0x00056980 0x00057f10 exact            # sc2_hooks.c:502
 0x000569b0 0x00057f40 call             # sc2_hooks.c:29
 0x000569f0 0x00057f80 call             # sc2_hooks.c:38
 0x00069890 0x0006ae00 exact            # sc2_guest.cpp:125
@@ -66,6 +67,7 @@
 0x0006b380 0x0006c970 exact            # sc2_hooks.c:276
 0x0006e030 0x0006f800 call             # sc2_wm_select.c:88
 0x00070000 keep constant         # d3d8_draw_adapter.c:165
+0x00077520 0x00079930 exact            # sc2_hooks.c:567
 0x00080000 keep constant         # d3d8_resource_adapter.c:11
 0x00081bc0 keep constant         # d3d8_resource_adapter.c:395
 0x000820d0 keep constant         # d3d8_draw_adapter.c:373
@@ -92,7 +94,7 @@
 0x000fa030 0x000fe700 manual           # sc2_wm_select.c:53
 0x000fa430 0x000feb40 manual           # sc2_wm_select.c:54
 0x000fffff keep constant         # d3d8_resource_adapter.c:201
-0x00103a75 0x00108b83 exact            # sc2_hooks.c:542
+0x00103a75 0x00108b83 exact            # sc2_hooks.c:562
 0x00103a9a 0x00108ba8 exact            # program_manual.c:69
 0x00105de5 0x0010afc5 call             # program_manual.c:68
 0x001068c7 0x0010baa7 manual           # sc2_xbe.h:32
