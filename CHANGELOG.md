@@ -1,18 +1,24 @@
 # Changelog
 
-## Unreleased
+## 0.3.0-beta.1
+
+The GameCube HD texture pack, the European disc in its five languages on the Mac, and fixes: Linux starts without
+shaderc installed, Heihachi's hair, and a Museum freeze. Both players need this version to play each other online.
 
 - **HD textures** ([#11](https://github.com/tmcleroy/soulcalibur2-recomp/issues/11)): the GameCube version's HD
   texture pack for Dolphin (*Soulcalibur 2 Complete HD Textures*), imported from your own download on the launcher's
   new Textures page and matched to the Xbox's textures (about 4,300 of them: characters, Link included, stages,
   menus), drawn while **HD textures** is on (it also switches in the in-game menu, while playing). **Dump textures**
   writes each texture the game draws to a folder, for making your own pack.
+- **The European disc** ([#17](https://github.com/tmcleroy/soulcalibur2-recomp/issues/17)): the launcher also takes
+  the PAL (Europe, Australia) disc, which plays in English, German, French, Spanish or Italian (the **Language**
+  feature). For now on the Mac only, and without the guests.
 - **Linux: the game starts without shaderc installed** ([#40](https://github.com/tmcleroy/soulcalibur2-recomp/issues/40)):
   on a system without the shaderc library (Debian and Ubuntu without `libshaderc1`, Arch without `shaderc`) the
   game stopped at once with "code 2". The Linux folder now carries its own `libshaderc_shared.so.1`.
-- **Guest converter consistency**: keep Python floating-point addition in the same order as the C++ builder, including on Python 3.12 and newer.
-- **Heihachi hair lighting**: correct PS2 material parsing so white hair no longer receives incorrect colored highlights.
-
+- **Heihachi's hair**: his white hair no longer shows teal and yellow highlights (the PlayStation 2 disc's material
+  colours were read from the wrong place). The launcher asks to rebuild the guests' file once. Thanks to Unitghit
+  ([#24](https://github.com/tmcleroy/soulcalibur2-recomp/pull/24)).
 - **No more freeze in the Museum on a new save**: with the guest characters loaded, Mode Select showed Museum
   before anything in it was unlocked, and pressing Down in its empty menu froze the game. The Museum now shows once
   something in it is unlocked, as on the Xbox.
