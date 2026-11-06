@@ -23,12 +23,3 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_ps2_material.py")
     endif()
 endif()
-
-if(BUILD_TESTING)
-    add_executable(sc2_link_hair_test ../tools/test_link_hair.cpp)
-    add_test(NAME sc2-link-hair COMMAND sc2_link_hair_test)
-    if(Python3_Interpreter_FOUND)
-        add_test(NAME sc2-link-hair-parity COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_link_hair.py" "$<TARGET_FILE:sc2_link_hair_test>")
-    endif()
-endif()

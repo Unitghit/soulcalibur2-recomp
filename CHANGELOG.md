@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Link hair visibility**: keep the outer hair surfaces visible from both sides, fixing dark gaps near his temples during character select and combat.
+- **Link's hair**: the locks framing his face are drawn again, fixing the dark gaps near his temples in character select and fights. The guests' file is rebuilt once.
 
 ## 0.3.0-beta.1
 

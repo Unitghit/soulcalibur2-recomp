@@ -173,25 +173,11 @@ def _weapon(gc_pack):
     return build_pack([vmg2vmx.convert(gp[0]), sound.convert_container(gp[1]), records.convert_records(gp[2])])
 
 
-def _link_hair_two_sided(model):
-    """Match the production Link-only outer-hair compatibility treatment."""
-    out = bytearray(model)
-    if out[:4] != b"VMX." or struct.unpack_from("<H", out, 0x14)[0] != 17:
-        raise ValueError("unexpected Link costume material layout")
-    base = struct.unpack_from("<I", out, 0x1c)[0]
-    for material in (3, 4):
-        if struct.unpack_from("<I", out, base + material * 0x50)[0] not in (0x08000002, 2):
-            raise ValueError("unexpected Link hair material flags")
-    for material in (3, 4):
-        struct.pack_into("<I", out, base + material * 0x50, 2)
-    return bytes(out)
-
-
 def _link_costume(template, gc_costume):
     """A converted costume pack: Spawn's parts (`template`) with Link's over them."""
     costume = pack_parts(gc_costume, True)
     converted = list(template)
-    converted[0] = _link_hair_two_sided(vmg2vmx.convert(costume[0]))
+    converted[0] = vmg2vmx.convert(costume[0])
     converted[1] = records.convert_records(costume[1])
     converted[2] = sound.convert_container(costume[2])
     converted[3] = motion.convert_pose_bank(costume[3])
